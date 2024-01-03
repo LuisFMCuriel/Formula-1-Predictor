@@ -1,7 +1,7 @@
 import requests
 import pandas as pd
 
-def extract_race_rounds(year_start: int = 1950, year_end: int = 2023) -> pd.DataFrame:
+def extract_race_rounds(start_year: int = 1950, end_year: int = 2023) -> pd.DataFrame:
     """
     Extract F1 race data from ergast API for the specified range of years.
 
