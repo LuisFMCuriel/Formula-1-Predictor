@@ -1,7 +1,7 @@
 import requests
 import pandas as pd
 
-def F1_data_extraction_general(year_start: int = 1950, year_end: int = 2023) -> pd.DataFrame:
+def extract_race_rounds(year_start: int = 1950, year_end: int = 2023) -> pd.DataFrame:
     """
     Extract F1 race data from ergast API for the specified range of years.
 
@@ -89,3 +89,59 @@ def extract_driver_standings(rounds):
 
     # Convert the list of dictionaries to a DataFrame and return
     return pd.DataFrame(driver_standings_list)
+
+def extract_race_results(rounds):
+    """
+    Extract race results data from the ergast API for the specified rounds.
+
+    Parameters:
+    - rounds (list): List of rounds, where each round is a tuple containing season and a list of round numbers.
+
+    Returns:
+    - pd.DataFrame: DataFrame containing race results data.
+    """
+    # Initialize a list to store race results data
+    results_list = []
+
+    # Iterate through the rounds and extract race results data
+    for n in range(len(rounds)):
+        for i in rounds[n][1]:
+            # Construct the API URL for race results
+            url = f'http://ergast.com/api/f1/{rounds[n][0]}/{i}/results.json'
+            response = requests.get(url)
+
+            # Check if the request was successful (status code 200)
+            if response.status_code == 200:
+                json_data = response.json()
+
+                # Extract race results information from the JSON data
+                races = json_data.get('MRData', {}).get('RaceTable', {}).get('Races', [])
+
+                try:
+                    for race in races:
+                        for item in race.get('Results', []):
+                            result_dict = {
+                                'season': int(race.get('season', None)),
+                                'round': int(race.get('round', None)),
+                                'circuit_id': race['Circuit'].get('circuitId', None),
+                                'driver': item['Driver'].get('driverId', None),
+                                'date_of_birth': item['Driver'].get('dateOfBirth', None),
+                                'nationality': item['Driver'].get('nationality', None),
+                                'constructor': item['Constructor'].get('constructorId', None),
+                                'grid': int(item.get('grid', None)),
+                                'time': int(item['Time']['millis']) if item.get('Time') else None,
+                                'status': item.get('status', None),
+                                'points': int(item.get('points', None)),
+                                'podium': int(item.get('position', None)),
+                                'url': race.get('url', None)
+                            }
+
+                            # Append the race results information to the list
+                            results_list.append(result_dict)
+
+                except Exception as e:
+                    print(f"Error extracting results for {rounds[n][0]}: {e}")
+
+    # Convert the list of dictionaries to a DataFrame and return
+    return pd.DataFrame(results_list)
+
