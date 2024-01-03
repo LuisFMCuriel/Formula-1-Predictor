@@ -145,3 +145,47 @@ def extract_race_results(rounds):
     # Convert the list of dictionaries to a DataFrame and return
     return pd.DataFrame(results_list)
 
+
+def extract_constructor_standings(constructor_rounds):
+    """
+    Extract constructor standings data from the ergast API for the specified rounds.
+
+    Parameters:
+    - constructor_rounds (list): List of constructor rounds, where each round is a tuple containing season and a list of round numbers.
+
+    Returns:
+    - pd.DataFrame: DataFrame containing constructor standings data.
+    """
+    # Initialize a list to store constructor standings data
+    constructor_standings_list = []
+
+    # Iterate through the constructor rounds and extract constructor standings data
+    for n in range(len(constructor_rounds)):
+        for i in constructor_rounds[n][1]:
+            # Construct the API URL for constructor standings
+            url = f'https://ergast.com/api/f1/{constructor_rounds[n][0]}/{i}/constructorStandings.json'
+            response = requests.get(url)
+
+            # Check if the request was successful (status code 200)
+            if response.status_code == 200:
+                json_data = response.json()
+
+                # Extract constructor standings information from the JSON data
+                standings = json_data.get('MRData', {}).get('StandingsTable', {}).get('StandingsLists', [])[0].get('ConstructorStandings', [])
+
+                for item in standings:
+                    constructor_standings_dict = {
+                        'season': int(json_data['MRData']['StandingsTable']['StandingsLists'][0]['season']),
+                        'round': int(json_data['MRData']['StandingsTable']['StandingsLists'][0]['round']),
+                        'constructor': item['Constructor'].get('constructorId', None),
+                        'constructor_points': int(item.get('points', None)),
+                        'constructor_wins': int(item.get('wins', None)),
+                        'constructor_standings_pos': int(item.get('position', None))
+                    }
+
+                    # Append the constructor standings information to the list
+                    constructor_standings_list.append(constructor_standings_dict)
+
+    # Convert the list of dictionaries to a DataFrame and return
+    return pd.DataFrame(constructor_standings_list)
+
