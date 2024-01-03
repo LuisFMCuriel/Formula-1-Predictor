@@ -1,6 +1,32 @@
 import requests
 import pandas as pd
 
+def get_rounds(races: pd.DataFrame = None, start_year: int = 2000, end_year: int = 2023):
+    """
+    Get a list of rounds for each season within the specified range.
+
+    Parameters:
+    - races (pd.DataFrame): DataFrame containing race information.
+    - start_year (int): Starting year for data extraction.
+    - end_year (int): Ending year for data extraction.
+
+    Returns:
+    - list: List of rounds for each season.
+    """
+    # If races DataFrame is not provided, extract it for the specified range
+    if races is None:
+        races = extract_race_rounds(start_year=start_year, end_year=end_year)
+
+    rounds = []
+
+    # Group races DataFrame by 'season' and iterate through groups
+    for year, group in races.groupby('season'):
+        # Append a list containing the year and rounds for that season
+        rounds.append([year, group['round'].tolist()])
+
+    return rounds
+
+
 def extract_race_rounds(start_year: int = 1950, end_year: int = 2023) -> pd.DataFrame:
     """
     Extract F1 race data from ergast API for the specified range of years.
