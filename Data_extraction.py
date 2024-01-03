@@ -1,7 +1,23 @@
 import requests
 import pandas as pd
+import os
 
-def get_rounds(races: pd.DataFrame = None, start_year: int = 2000, end_year: int = 2023):
+def save_data(data: pd.DataFrame, saving_path: str = "./data", name: str = "races") -> None:
+    """
+    Save a DataFrame to a CSV file.
+
+    Parameters:
+    - data (pd.DataFrame): DataFrame to be saved.
+    - saving_path (str): Directory path where the file will be saved.
+    - name (str): Name of the CSV file (without extension).
+    """
+    # Create the directory if it doesn't exist
+    os.makedirs(saving_path, exist_ok=True)
+
+    # Save the DataFrame to a CSV file
+    data.to_csv(os.path.join(saving_path, name + ".csv"), index=False)
+
+def get_rounds(races: pd.DataFrame = None, start_year: int = 2000, end_year: int = 2023) -> list:
     """
     Get a list of rounds for each season within the specified range.
 
