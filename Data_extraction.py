@@ -54,11 +54,11 @@ def extract_race_rounds(start_year: int = 1950, end_year: int = 2023) -> pd.Data
     Returns:
     - pd.DataFrame: DataFrame containing F1 race data.
     """
-    assert year_start < year_end, "Wrong configuration of the starting year and ending year, please make sure the configuration is correct"
+    assert start_year < end_year, "Wrong configuration of the starting year and ending year, please make sure the configuration is correct"
 
     races_list = []
 
-    for year in range(year_start, year_end + 1):
+    for year in range(start_year, end_year + 1):
         # Construct the API URL for the specific year
         url = f'https://ergast.com/api/f1/{year}.json'
         # Make an HTTP request to get the JSON data
