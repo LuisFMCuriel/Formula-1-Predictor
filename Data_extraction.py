@@ -2,7 +2,7 @@ import requests
 import pandas as pd
 import os
 
-def lookup (df, team, points):
+def calculate_points_per_round (df, team, points):
   """
   Calculate the points a team won after each round.
 
