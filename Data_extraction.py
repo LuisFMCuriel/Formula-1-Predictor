@@ -2,6 +2,36 @@ import requests
 import pandas as pd
 import os
 
+def calculate_points_per_round (df, team, points):
+  """
+  Calculate the points a team won after each round.
+
+  Parameters:
+  - df (DataFrame): Input DataFrame containing season, team, round, and points information.
+  - team_column (str): Name of the column containing team information.
+  - round_column (str): Name of the column containing round information.
+  - points_column (str): Name of the column containing points information.
+
+  Returns:
+  - DataFrame: A new DataFrame with an additional column 'points_after_race'
+                indicating the points a team won after each round.
+  """
+
+  # New column with the team specifying the season and the round, for example team: leclerc, round: 1 and season: 2022 -> 2022leclerc1
+  df['lookup1'] = df.season.astype(str) + df[team] + df['round'].astype(str)
+  # New column with the team specifying the season and the previous round, for example eam: leclerc, round: 1 and season: 2022 -> 2022leclerc0
+  df['lookup2'] = df.season.astype(str) + df[team] + (df['round']-1).astype(str)
+  # Calculate the points the team won after each round. For example; match in the right dataframe the lookup2 (after the round) and the lookup1 (before the round) and keep track of the team's points
+  # In this case for example could be points_x after the round, and points_y before the round 
+  new_df = df.merge(df[['lookup1', points]], how = 'left', left_on='lookup2',right_on='lookup1')
+  # Drop the keywords we created by merging the dataframes except for the points of the left dataframe
+  new_df.drop(['lookup1_x', 'lookup2', 'lookup1_y'], axis = 1, inplace = True)
+  # Change the name of the points from the right dataframe to points_after_race and points from the left dataframe to only points
+  new_df.rename(columns = {points+'_x': points+'_after_race', points+'_y': points}, inplace = True)
+  # Fill NA with 0's, if 'points'_after_race is 0 means the season has just started or the team hasn't won any points yet
+  new_df[points].fillna(0, inplace = True)
+  return new_df
+
 def save_data(data: pd.DataFrame, saving_path: str = "./data", name: str = "races") -> None:
     """
     Save a DataFrame to a CSV file.
