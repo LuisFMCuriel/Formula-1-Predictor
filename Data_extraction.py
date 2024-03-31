@@ -47,7 +47,10 @@ def save_data(data: pd.DataFrame, saving_path: str = "./data", name: str = "race
     # Save the DataFrame to a CSV file
     data.to_csv(os.path.join(saving_path, name + ".csv"), index=False)
 
-def get_rounds(races: pd.DataFrame = None, start_year: int = 2000, end_year: int = 2023) -> list:
+def get_rounds(races: pd.DataFrame = None, 
+               start_year: int = 2000, 
+               end_year: int = 2023, 
+               save: bool = True) -> list:
     """
     Get a list of rounds for each season within the specified range.
 
@@ -55,14 +58,18 @@ def get_rounds(races: pd.DataFrame = None, start_year: int = 2000, end_year: int
     - races (pd.DataFrame): DataFrame containing race information.
     - start_year (int): Starting year for data extraction.
     - end_year (int): Ending year for data extraction.
+    - save (bool): Save races csv
 
     Returns:
     - list: List of rounds for each season.
     """
     # If races DataFrame is not provided, extract it for the specified range
     if races is None:
-        races = extract_race_rounds(start_year=start_year, end_year=end_year)
-
+        try:
+            races = pd.read_csv('./data/races_from{}to{}.csv'.format(start_year, end_year))
+        except:
+            races = extract_race_rounds(start_year=start_year, end_year=end_year, save = save)
+        
     rounds = []
 
     # Group races DataFrame by 'season' and iterate through groups
@@ -73,13 +80,14 @@ def get_rounds(races: pd.DataFrame = None, start_year: int = 2000, end_year: int
     return rounds
 
 
-def extract_race_rounds(start_year: int = 1950, end_year: int = 2023) -> pd.DataFrame:
+def extract_race_rounds(start_year: int = 1950, end_year: int = 2023, save: bool = True) -> pd.DataFrame:
     """
     Extract F1 race data from ergast API for the specified range of years.
 
     Parameters:
     - year_start (int): Starting year for data extraction.
     - year_end (int): Ending year for data extraction.
+    - save (bool): Save races csv.
 
     Returns:
     - pd.DataFrame: DataFrame containing F1 race data.
@@ -115,7 +123,8 @@ def extract_race_rounds(start_year: int = 1950, end_year: int = 2023) -> pd.Data
 
                 # Append the race information to the list
                 races_list.append(race_dict)
-
+    if save:
+        save_data(pd.DataFrame(races_list), name='races_from{}to{}'.format(start_year, end_year))
     # Convert the list of dictionaries to a DataFrame and return
     return pd.DataFrame(races_list)
 
