@@ -298,11 +298,11 @@ def get_weather_info(df: pd.DataFrame = None, start_year: int = 1950, end_year: 
     weather_df = pd.DataFrame(columns = weather_dict.keys())
 
     # If races DataFrame is not provided, extract it for the specified range
-    if races is None:
+    if df is None:
         try:
-            races = pd.read_csv('./data/races_from{}to{}.csv'.format(start_year, end_year))
+            df = pd.read_csv('./data/races_from{}to{}.csv'.format(start_year, end_year))
         except:
-            races = extract_race_rounds(start_year=start_year, end_year=end_year, save = save)
+            df = extract_race_rounds(start_year=start_year, end_year=end_year, save = save)
 
     # Create a dataframe for weather
     weather = df.iloc[:,[0,1,2]]
@@ -313,7 +313,7 @@ def get_weather_info(df: pd.DataFrame = None, start_year: int = 1950, end_year: 
             for i in range(4):
                 df_table = pd.read_html(link)[i]
                 # Look for the 'Weather' column in the table
-                if 'Weather' in df_table.iloc[:, 0]:
+                if 'Weather' in list(df_table.iloc[:, 0]):
                     # If found, append the weather information to the 'info' list
                     n = list(df_table.iloc[:, 0]).index('Weather')
                     info.append(df_table.iloc[n, 1])
@@ -332,7 +332,7 @@ def get_weather_info(df: pd.DataFrame = None, start_year: int = 1950, end_year: 
         except Exception as e:
             # If an exception occurs, append 'not found' to the 'info' list
             info.append('not found')
-            print(f"Error occurred for {link}: {e}")
+            #print(f"Error occurred for {link}: {e}")
     # Add the found info into a new column called weather
     weather['weather'] = info
     # map the weather with keywords for one hot encoding
