@@ -1,6 +1,7 @@
 import requests
 import pandas as pd
 import os
+from selenium import webdriver
 
 def calculate_points_per_round (df, team, points):
   """
@@ -171,7 +172,7 @@ def extract_driver_standings(rounds):
     # Convert the list of dictionaries to a DataFrame and return
     return pd.DataFrame(driver_standings_list)
 
-def extract_race_results(rounds):
+def extract_race_results(rounds: list):
     """
     Extract race results data from the ergast API for the specified rounds.
 
@@ -227,7 +228,7 @@ def extract_race_results(rounds):
     return pd.DataFrame(results_list)
 
 
-def extract_constructor_standings(constructor_rounds):
+def extract_constructor_standings(constructor_rounds: list):
     """
     Extract constructor standings data from the ergast API for the specified rounds.
 
@@ -270,3 +271,74 @@ def extract_constructor_standings(constructor_rounds):
     # Convert the list of dictionaries to a DataFrame and return
     return pd.DataFrame(constructor_standings_list)
 
+def get_weather_info(df: pd.DataFrame = None, start_year: int = 1950, end_year: int = 2023, save: bool = True):
+    """
+    Extracts weather information from web pages linked in the DataFrame.
+
+    Args:
+    - df (DataFrame): A pandas DataFrame containing a column named 'url' which
+                    contains URLs linking to web pages.
+    - year_start (int): Starting year for data extraction.
+    - year_end (int): Ending year for data extraction.
+    - save (bool): Save races csv
+    Returns:
+    - list: A list containing weather information extracted from the web pages.
+          If weather information is not found or an error occurs, 'not found'
+          is appended to the list.
+    """
+    info = []
+    # Use keywords to find out what was the weather that day
+    weather_dict = {'weather_warm': ['soleggiato', 'clear', 'warm', 'hot', 'sunny', 'fine', 'mild', 'sereno'],
+               'weather_cold': ['cold', 'fresh', 'chilly', 'cool'],
+               'weather_dry': ['dry', 'asciutto'],
+               'weather_wet': ['showers', 'wet', 'rain', 'pioggia', 'damp', 'thunderstorms', 'rainy'],
+               'weather_cloudy': ['overcast', 'nuvoloso', 'clouds', 'cloudy', 'grey', 'coperto']}
+    
+    # One hot encode the weather, depending if was cold, dry, wet, cloudy or warm using the previous dict
+    weather_df = pd.DataFrame(columns = weather_dict.keys())
+
+    # If races DataFrame is not provided, extract it for the specified range
+    if races is None:
+        try:
+            races = pd.read_csv('./data/races_from{}to{}.csv'.format(start_year, end_year))
+        except:
+            races = extract_race_rounds(start_year=start_year, end_year=end_year, save = save)
+
+    # Create a dataframe for weather
+    weather = df.iloc[:,[0,1,2]]
+    # Iterate through each URL in the DataFrame
+    for link in df['url']:
+        try:
+            # Try to read HTML tables from the webpage
+            for i in range(4):
+                df_table = pd.read_html(link)[i]
+                # Look for the 'Weather' column in the table
+                if 'Weather' in df_table.iloc[:, 0]:
+                    # If found, append the weather information to the 'info' list
+                    n = list(df_table.iloc[:, 0]).index('Weather')
+                    info.append(df_table.iloc[n, 1])
+                    break
+            else:
+                # If 'Weather' column not found in first 4 tables, use Selenium to fetch weather information
+                driver = webdriver.Chrome()
+                driver.get(link)
+                # click language button
+                button = driver.find_element_by_link_text('Italiano')
+                button.click()
+                # Extract weather information using XPath
+                clima = driver.find_element_by_xpath('//*[@id="mw-content-text"]/div/table[1]/tbody/tr[9]/td').text
+                info.append(clima)
+                driver.quit()
+        except Exception as e:
+            # If an exception occurs, append 'not found' to the 'info' list
+            info.append('not found')
+            print(f"Error occurred for {link}: {e}")
+    # Add the found info into a new column called weather
+    weather['weather'] = info
+    # map the weather with keywords for one hot encoding
+    for col in weather_df:
+        weather_df[col] = weather['weather'].map(lambda x: 1 if any(i in weather_dict[col] for i in x.lower().split()) else 0)
+
+    # Join info of the weather with the info of the races: season, round, circuit_id. A total of 9 columns
+    weather_info = pd.concat([weather, weather_df], axis = 1)
+    return weather_info
