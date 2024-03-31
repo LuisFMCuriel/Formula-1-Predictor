@@ -151,9 +151,9 @@ def extract_driver_standings(rounds):
                         'season': int(json_data['MRData']['StandingsTable']['StandingsLists'][0]['season']),
                         'round': int(json_data['MRData']['StandingsTable']['StandingsLists'][0]['round']),
                         'driver': item['Driver'].get('driverId', None),
-                        'driver_points': int(item.get('points', None)),
-                        'driver_wins': int(item.get('wins', None)),
-                        'driver_standings_pos': int(item.get('position', None))
+                        'driver_points': float(item.get('points', None)),
+                        'driver_wins': float(item.get('wins', None)),
+                        'driver_standings_pos': float(item.get('position', None))
                     }
 
                     # Append the driver standings information to the list
@@ -201,9 +201,9 @@ def extract_race_results(rounds):
                                 'nationality': item['Driver'].get('nationality', None),
                                 'constructor': item['Constructor'].get('constructorId', None),
                                 'grid': int(item.get('grid', None)),
-                                'time': int(item['Time']['millis']) if item.get('Time') else None,
+                                'time': float(item['Time']['millis']) if item.get('Time') else None,
                                 'status': item.get('status', None),
-                                'points': int(item.get('points', None)),
+                                'points': float(item.get('points', None)),
                                 'podium': int(item.get('position', None)),
                                 'url': race.get('url', None)
                             }
@@ -250,8 +250,8 @@ def extract_constructor_standings(constructor_rounds):
                         'season': int(json_data['MRData']['StandingsTable']['StandingsLists'][0]['season']),
                         'round': int(json_data['MRData']['StandingsTable']['StandingsLists'][0]['round']),
                         'constructor': item['Constructor'].get('constructorId', None),
-                        'constructor_points': int(item.get('points', None)),
-                        'constructor_wins': int(item.get('wins', None)),
+                        'constructor_points': float(item.get('points', None)),
+                        'constructor_wins': float(item.get('wins', None)),
                         'constructor_standings_pos': int(item.get('position', None))
                     }
 
