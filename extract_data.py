@@ -38,6 +38,10 @@ def main():
     # Extract and save race weather data
     weather = get_weather_info(start_year = args.start_year, end_year = args.end_year)
     save_data(weather, name='weather_from{}to{}'.format(args.start_year, args.end_year))
+    
+    # Extract qualifying results data
+    qualifying = get_qualifying_results(args.start_year, args.end_year)
+    save_data(qualifying, name='qualifying_from{}to{}'.format(args.start_year, args.end_year))
 
 if __name__ == "__main__":
     main()

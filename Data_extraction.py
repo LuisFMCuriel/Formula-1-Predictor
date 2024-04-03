@@ -2,8 +2,9 @@ import requests
 import pandas as pd
 import os
 from selenium import webdriver
+from bs4 import BeautifulSoup
 
-def calculate_points_per_round (df, team, points):
+def calculate_points_per_round (df, team, points) -> pd.DataFrame:
   """
   Calculate the points a team won after each round.
 
@@ -342,3 +343,60 @@ def get_weather_info(df: pd.DataFrame = None, start_year: int = 1950, end_year: 
     # Join info of the weather with the info of the races: season, round, circuit_id. A total of 9 columns
     weather_info = pd.concat([weather, weather_df], axis = 1)
     return weather_info
+
+def get_qualifying_results(start_year=1983, end_year=2023):
+    """
+    Scrapes qualifying results data from the Formula 1 website for the specified range of years.
+
+    Args:
+        start_year (int): The start year for scraping qualifying results. Default is 1983.
+        end_year (int): The end year for scraping qualifying results. Default is 2023.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the scraped qualifying results data.
+    """
+    qualifying_results = pd.DataFrame()
+    
+    # Loop through each year in the specified range
+    for year in range(start_year, end_year):
+        # Construct URL for the races page of the current year
+        url = f'https://www.formula1.com/en/results.html/{year}/races.html'
+        # Send GET request to fetch the webpage
+        r = requests.get(url)
+        # Parse the HTML content
+        soup = BeautifulSoup(r.text, 'html.parser')
+        
+        # Extract links for each race of the current year
+        year_links = [link.get('href') for link in soup.find_all('a', class_="resultsarchive-filter-item-link FilterTrigger") 
+                      if f'/en/results.html/{year}/races/' in link.get('href')]
+        
+        year_df = pd.DataFrame()
+        new_url = 'https://www.formula1.com{}'
+        
+        # Loop through each race link of the current year
+        for n, link in enumerate(year_links):
+            # Modify the link to point to the starting grid page
+            link = link.replace('race-result.html', 'starting-grid.html')
+            # Print the URL for debugging purposes
+            print(new_url.format(link))
+            # Read HTML tables from the starting grid page
+            df_list = pd.read_html(new_url.format(link))
+            df = df_list[0]
+            # Add columns for season and round number
+            df['season'] = year
+            df['round'] = n + 1
+            # Remove columns with 'Unnamed' prefix
+            df = df.loc[:, ~df.columns.str.startswith('Unnamed')]
+            # Concatenate the current race data to the year DataFrame
+            year_df = pd.concat([year_df, df])
+
+        # Concatenate the year DataFrame to the overall qualifying results DataFrame
+        qualifying_results = pd.concat([qualifying_results, year_df])
+        
+    # Rename columns for readability
+    qualifying_results.rename(columns = {'Pos': 'grid_position', 'Driver': 'driver_name', 'Car': 'car',
+                                     'Time': 'qualifying_time'}, inplace = True)
+    # Remove row No
+    qualifying_results.drop('No', axis = 1, inplace = True)
+    
+    return qualifying_results
