@@ -378,7 +378,6 @@ def get_qualifying_results(start_year=1983, end_year=2023):
             # Modify the link to point to the starting grid page
             link = link.replace('race-result.html', 'starting-grid.html')
             # Print the URL for debugging purposes
-            print(new_url.format(link))
             # Read HTML tables from the starting grid page
             df_list = pd.read_html(new_url.format(link))
             df = df_list[0]
