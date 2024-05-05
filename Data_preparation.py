@@ -32,3 +32,10 @@ driver_standings.drop(['driver_points_after_race',
 constructor_standings.drop(['constructor_points_after_race', 
                             'constructor_wins_after_race',
                             'constructor_standings_pos_after_race' ],axis = 1, inplace = True)
+
+# Merge information
+df1 = pd.merge(races, weather, how='inner', on=['season', 'round', 'circuit_id']).drop(['lat', 'long','country','weather'], axis = 1)
+df2 = pd.merge(df1, results, how='inner', on=['season', 'round', 'circuit_id', 'url']).drop(['url','points', 'status', 'time'], axis = 1)
+df3 = pd.merge(df2, driver_standings, how='left', on=['season', 'round', 'driver']) 
+df4 = pd.merge(df3, constructor_standings, how='left', on=['season', 'round', 'constructor'])
+final_df = pd.merge(df4, qualifying, how='inner', on=['season', 'round', 'grid']).drop(['driver_name', 'car'], axis = 1)
