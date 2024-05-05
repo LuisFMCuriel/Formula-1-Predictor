@@ -26,6 +26,7 @@ qualifying.rename(columns = {'grid_position': 'grid'}, inplace = True)
 driver_standings.drop(['driver_points_after_race', 
                        'driver_wins_after_race', 
                        'driver_standings_pos_after_race'] ,axis = 1, inplace = True) 
+
 # Drop unnecessary data, you stay with: 
 # season round constructor constructor_points constructor_wins constructor_standings_pos
 constructor_standings.drop(['constructor_points_after_race', 
